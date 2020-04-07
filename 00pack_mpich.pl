@@ -61,3 +61,10 @@ system ("rm -rf /opt/$currentVer");
 system("mkdir /opt/$currentVer");
 system ("cp -r $current_path/$Dir4download/$currentVer/mpich_install /opt/$currentVer");
 if($? != 0){die "cp -r $current_path/$Dir4download/$currentVer/mpich_install /opt/$currentVer failed!\n";}
+#setting path and ld_library_path
+
+system("perl -p -i.bak -e 's/.*mpich-.+\n//g;' /etc/profile");# remove old setting lines
+
+`echo 'export PATH=/opt/$currentVer/mpich_install/bin:\$PATH' >> /etc/profile`;
+`echo 'export LD_LIBRARY_PATH=/opt/$currentVer/mpich_install/lib:\$LD_LIBRARY_PATH' >> /etc/profile`;
+print "You need to logout for new path setting\n";
