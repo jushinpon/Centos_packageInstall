@@ -1,4 +1,6 @@
-#Perl script to Downlaod and install MPICH developed by Prof. Shin-Pon Ju
+#Perl script to Downlaod and install MPICH by using different GCC versions (developed by Prof. Shin-Pon Ju)
+# You need to check what GCC versions have been installed. (/opt/rh/) 
+
 #1. You need go to https://www.mpich.org/downloads/ to check the latest mpich version and set the downloading url
 #2. compiling procedure
 #a. make a directory to download the tar.gz file 
@@ -7,9 +9,11 @@
 #d. configure, make, make install
 use warnings;
 use strict;
-
+use Env::Modify qw(:sh source);
 use Cwd; #Find Current Path
 use File::Copy; # Copy File
+my @GCC_Version = (7,8,9); # GCC versions have been installed in "/opt/rh/" 
+
 my $current_path = getcwd;# get the current path dir
 my $outputDir = "mpi_output"; # for output files
 system ("rm -rf $outputDir");# remove the older directory first
@@ -40,31 +44,41 @@ print $Check "$?: tar -xvzf mpich\n";
 #./configure --prefix=/home/<USERNAME>/mpich-install
 chdir("$current_path/$Dir4download/$currentVer");#$currentVer is the directory name after tar
 #$Ch = system("./configure CC=gcc CXX=g++ FC=gfortran --prefix=$Current_Path/$get_MPI_Folder/mpich-install"); #./configure
-system ("rm -rf $current_path/$Dir4download/$currentVer/mpich_install");# remove the older directory first
-system("./configure --prefix=$current_path/$Dir4download/$currentVer/mpich_install"); #./configure
-if($? != 0){die "config $currentVer failed!\n";}
-print $Check "$?: configure $currentVer\n";	
-#after the configure process is done, type "make" and then "make install"
-system("make clean"); 
-sleep(1);
-system("make"); 
-if($? != 0){die "make $currentVer process failed!\n";}
-print $Check "$?: make $currentVer\n";
+for my $GV (@GCC_Version){
+    chomp $GV;
+    source("/opt/rh/devtoolset-$GV/enable"); # enable GCC of this version for current shell and all subshell
+    system ("rm -rf $current_path/$Dir4download/$currentVer/$currentVer"."_GCC$GV");# remove the older directory first
+    my $GCCcheck = `gcc -v`;
 
-system("make install");
-if($? != 0){die "make install $currentVer failed!\n";}
-print $Check "$?: make install $currentVer\n";
+    print $Check "\n\n****GCC version check: $GCCcheck\n\n";
+    
+    system("./configure --prefix=$current_path/$Dir4download/$currentVer/$currentVer"."_GCC$GV"); #./configure
+    if($? != 0){die "config $currentVer failed!\n";}
+    print $Check "$?: configure $currentVer\n";	
+    #after the configure process is done, type "make" and then "make install"
+    system("make clean"); 
+    sleep(1);
+    system("make"); 
+    if($? != 0){die "make $currentVer process failed!\n";}
+    print $Check "$?: make $currentVer\n";
 
-print $Check "ALL DONE!\n";
+    system("make install");
+    if($? != 0){die "make install $currentVer failed!\n";}
+    print $Check "$?: make install $currentVer\n";
+
+    print $Check "ALL DONE!\n";
+    
+    system ("rm -rf /opt/$currentVer"."_GCC$GV");
+    system("mkdir /opt/$currentVer"."_GCC$GV");
+    system ("cp -r $current_path/$Dir4download/$currentVer/$currentVer"."_GCC$GV /opt/");
+    if($? != 0){die "cp -r $current_path/$Dir4download/$currentVer/$currentVer"."_GCC$GV /opt/ failed!\n";}
+
+}
 close($Check);
-system ("rm -rf /opt/$currentVer");
-system("mkdir /opt/$currentVer");
-system ("cp -r $current_path/$Dir4download/$currentVer/mpich_install /opt/$currentVer");
-if($? != 0){die "cp -r $current_path/$Dir4download/$currentVer/mpich_install /opt/$currentVer failed!\n";}
 #setting path and ld_library_path
 
 system("perl -p -i.bak -e 's/.*mpich-.+\n//g;' /etc/profile");# remove old setting lines
 
-`echo 'export PATH=/opt/$currentVer/mpich_install/bin:\$PATH' >> /etc/profile`;
-`echo 'export LD_LIBRARY_PATH=/opt/$currentVer/mpich_install/lib:\$LD_LIBRARY_PATH' >> /etc/profile`;
-print "You need to logout for new path setting\n";
+#`echo 'export PATH=/opt/$currentVer/mpich_install/bin:\$PATH' >> /etc/profile`;
+#`echo 'export LD_LIBRARY_PATH=/opt/$currentVer/mpich_install/lib:\$LD_LIBRARY_PATH' >> /etc/profile`;
+#print "You need to logout for new path setting\n";
