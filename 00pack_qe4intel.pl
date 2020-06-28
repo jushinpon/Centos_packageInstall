@@ -21,14 +21,14 @@ my $URL = "https://github.com/QEF/q-e.git";#url to download
 my $Dir4download = "qe_download"; #the directory we download Mpich
 
 my $script_CurrentPath = getcwd; #get perl code path
-#system("rm -rf $Dir4download");# remove the older directory first
-#system("mkdir $Dir4download");# make a directory in current path
-#
-##download qe
-#chdir("$script_CurrentPath/$Dir4download");# cd to this dir for downloading the packages
-##get the latest package in the directory and save it as the filename you want
-#system("git clone $URL");  
-#print $Check "$?:wget -O or git clone qe $URL\n";
+system("rm -rf $Dir4download");# remove the older directory first
+system("mkdir $Dir4download");# make a directory in current path
+
+#download qe
+chdir("$script_CurrentPath/$Dir4download");# cd to this dir for downloading the packages
+#get the latest package in the directory and save it as the filename you want
+system("git clone $URL");  
+print $Check "$?:wget -O or git clone qe $URL\n";
 #
 chdir("$script_CurrentPath/$Dir4download/q-e");
 my $prefix = "--prefix=/opt/QE_PSXE2020";
